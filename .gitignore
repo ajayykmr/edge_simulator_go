@@ -1,0 +1,47 @@
+# Go build artifacts
+bin/
+build/
+dist/
+*.exe
+*.out
+*.test
+
+# Go modules/workspace
+go.sum
+go.work
+go.work.sum
+
+# Logs & temp files
+*.log
+*.tmp
+*.pid
+
+# Tests and coverage
+*.coverprofile
+coverage.*
+profile.cov
+
+# Env and config secrets
+.env
+docker-compose.override.yml
+
+# IDE/editor settings
+.vscode/
+.idea/
+*.swp
+
+# OS / Misc
+.DS_Store
+Thumbs.db
+
+# Mosquitto data and persistence
+mosquitto/data/
+mosquitto/log/
+mosquitto/mosquitto.db*
+mosquitto/passwd
+
+# Docker volumes (if using docker-compose)
+volumes/
+
+#tmp folder
+tmp/
