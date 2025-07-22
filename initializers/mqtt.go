@@ -25,7 +25,7 @@ func InitializeMQTTClient() (mqtt.Client, error) {
 	if err != nil {
 		return mqtt.Client{}, fmt.Errorf("failed to initialize MQTT client: %v", err)
 	} else {
-		log.Println("MQTT client initialized successfully")
+		fmt.Println("✅ MQTT client initialized successfully")
 	}
 
 	testTopic := os.Getenv("MQTT_TEST_TOPIC")
@@ -33,9 +33,9 @@ func InitializeMQTTClient() (mqtt.Client, error) {
 	if testTopic != "" && testTopicMessage != "" {
 		err = mqttClient.Publish(testTopic, 0, false, testTopicMessage)
 		if err != nil {
-			log.Printf("Failed to publish test message: %v", err)
+			fmt.Printf("❌ Failed to publish test message: %v", err)
 		} else {
-			log.Println("Test message published to MQTT broker on topic:", testTopic)
+			fmt.Println("✅ Test message published to MQTT broker on topic:", testTopic)
 		}
 	} else {
 		log.Println("MQTT_TEST_TOPIC or MQTT_TEST_MESSAGE environment variable not set, skipping test message publication")

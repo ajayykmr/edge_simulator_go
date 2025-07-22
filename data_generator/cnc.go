@@ -1,4 +1,4 @@
-package simulator
+package data_generator
 
 import (
 	"time"

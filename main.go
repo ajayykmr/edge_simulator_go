@@ -1,35 +1,45 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
-	"log"
-	"net/http"
-	"os"
+	"context"
+	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
-	handler "github.com/ajayykmr/edge_simulator_go/http_handlers"
 	"github.com/ajayykmr/edge_simulator_go/initializers"
-	"github.com/ajayykmr/edge_simulator_go/simulator"
-	"github.com/gin-gonic/gin"
+	"github.com/ajayykmr/edge_simulator_go/machines"
+	"github.com/manifoldco/promptui"
 )
 
-func SendCNCToGateway(data simulator.CNCData, endpoint string) error {
-	payload, err := json.Marshal(data)
-	if err != nil {
-		return err
+var httpRunning, mqttRunning bool
+var httpCount, mqttCount int
+var httpCancel context.CancelFunc
+
+var sessionStart = time.Now()
+
+func waitForEnter() {
+	prompt := promptui.Prompt{
+		Label:     "Press Enter to continue...",
+		Default:   "",    // So pressing Enter without typing anything works
+		AllowEdit: false, // Disables user editing of default
 	}
 
-	resp, err := http.Post(endpoint, "application/json", bytes.NewBuffer(payload))
+	_, err := prompt.Run()
 	if err != nil {
-		return err
+		fmt.Println("Prompt failed:", err)
 	}
-	defer resp.Body.Close()
-
-	log.Printf("Posted to %s | Status: %s", endpoint, resp.Status)
-	return nil
 }
+
 func main() {
+
+	clearScreen()
+
+	fmt.Println("🚀 Welcome to Edge Simulator!")
+	fmt.Println("🛠️  Simulating industrial machine data via HTTP and MQTT")
+	fmt.Println("📈 Real-time data. Graceful control. Instant feedback.\n")
+
+	// waitForEnter()
 
 	// Load environment variables
 	initializers.LoadEnvVariables()
@@ -37,43 +47,118 @@ func main() {
 	//initialize MQTT client
 	mqttClient, err := initializers.InitializeMQTTClient()
 	if err != nil {
-		log.Println("Failed to initialize MQTT client: ", err.Error())
+		fmt.Println("❌ Failed to initialize MQTT client: ", err.Error())
 		return
 	} else {
 		defer mqttClient.Disconnect()
 	}
 
-	//
-	endpoint := "http://localhost:8080/ingest" // Change this if hosted elsewhere
-	machineID := "CNC-001"
+	fmt.Println()
+	waitForEnter()
 
 	for {
-		data := simulator.GenerateCNCData(machineID)
+		clearScreen()
 
-		err := SendToGateway(data, endpoint)
-		if err != nil {
-			log.Println("Failed to send data:", err)
+		prompt := promptui.Select{
+			Label: "Select Action",
+			Items: []string{
+				menuItem("HTTP", httpRunning, httpCount),
+				menuItem("MQTT", mqttRunning, mqttCount),
+				"Exit",
+			},
 		}
 
-		time.Sleep(time.Millisecond * 500) // adjustable interval
+		_, result, err := prompt.Run()
+		if err != nil {
+			fmt.Println("Prompt failed:", err)
+			return
+		}
+
+		switch {
+		case strings.Contains(result, "HTTP"):
+			if !httpRunning {
+				httpCount = askForNumber("Enter HTTP task count")
+				ctx, cancel := context.WithCancel(context.Background())
+				httpCancel = cancel
+				go machines.SendMachineDataViaHTTP(ctx, httpCount)
+				httpRunning = true
+			} else {
+				if httpCancel != nil {
+					httpCancel() // stops the goroutines
+				}
+				httpRunning = false
+			}
+		case strings.Contains(result, "MQTT"):
+			mqttRunning = !mqttRunning
+			if mqttRunning {
+				mqttCount = askForNumber("Enter MQTT task count")
+			}
+		case result == "Exit":
+			clearScreen()
+			if httpCancel != nil {
+				httpCancel() // stops the goroutines
+			}
+			fmt.Println("🧭 Shutting down simulator...")
+			time.Sleep(400 * time.Millisecond)
+
+			// fmt.Println("📡 Disconnecting sensors...")
+			// time.Sleep(300 * time.Millisecond)
+
+			// fmt.Println("⚙️  Stopping machines...")
+			// time.Sleep(300 * time.Millisecond)
+
+			// fmt.Println("📦 Cleaning up resources...")
+			// time.Sleep(300 * time.Millisecond)
+
+			// fmt.Println("✅ All systems idle.")
+			// time.Sleep(300 * time.Millisecond)
+
+			duration := time.Since(sessionStart)
+			fmt.Printf("🕒 Session duration: %s\n\n", duration.Round(time.Second))
+			time.Sleep(300 * time.Millisecond)
+
+			// fmt.Println("👋 Thank you for using the simulator.")
+			// fmt.Println("🔒 Exit complete.")
+			return
+		}
+	}
+}
+
+func menuItem(name string, running bool, count int) string {
+	if running {
+		return fmt.Sprintf("Toggle %s [Running] (Current: %d tasks)", name, count)
+	}
+	return fmt.Sprintf("Toggle %s [Stopped]", name)
+}
+
+func askForNumber(label string) int {
+	prompt := promptui.Prompt{
+		Label: label,
+		Validate: func(input string) error {
+			_, err := strconv.Atoi(input)
+			if err != nil {
+				return fmt.Errorf("Please enter a valid number.")
+			}
+			return nil
+		},
 	}
 
-	//Gin router
-	port := os.Getenv("PORT")
-	if port == "" {
-		log.Println("PORT environment variable not set, using default port 8080")
-		port = "8080"
-	}
-	gin.SetMode(gin.ReleaseMode) // Set Gin to release mode (also stops debug messages)
-	r := gin.Default()
-	r.GET("/health", handler.HealthHandler)
-
-	log.Println("Starting server on port: " + port)
-
-	err = r.Run(":" + port)
+	result, err := prompt.Run()
 	if err != nil {
-		log.Fatalf("Failed to start server: %v", err)
-		return
+		fmt.Println("Invalid input.")
+		return 0
 	}
 
+	num, _ := strconv.Atoi(result)
+	return num
+}
+
+func clearScreen() {
+	// ANSI escape code to clear the screen
+	fmt.Print("\033[H\033[2J")
+
+	fmt.Println()
+	fmt.Println("╔════════════════════════════╗")
+	fmt.Println("║   🌐 Edge Simulator v1.0   ║")
+	fmt.Printf("╚════════════════════════════╝\n\n")
 }
