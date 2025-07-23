@@ -128,6 +128,9 @@ func main() {
 			if httpCancel != nil {
 				httpCancel() // stops the goroutines
 			}
+			if mqttCancel != nil {
+				mqttCancel() // stops the goroutines
+			}
 			printExitMessages()
 
 			return
@@ -167,6 +170,8 @@ func askForNumber(label string) int {
 func clearScreen() {
 	// ANSI escape code to clear the screen
 	// fmt.Print("\033[H\033[2J")
+
+	time.Sleep(100 * time.Millisecond) // slight delay for better UX
 	fmt.Print("\033[2J\033[H\033[3J")
 	fmt.Println()
 	fmt.Println("╔════════════════════════════╗")
