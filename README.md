@@ -114,8 +114,6 @@ The Edge Simulator is run as a CLI application. It requires an HTTP server (e.g.
 │   ├── load_env_variables.go # Loads environment variables from .env
 │   └── mqtt.go            # Initializes MQTT client
 ├── kafka
-│   ├── consumer
-│   │   └── consumer.go    # Kafka consumer implementation
 │   └── producer
 │       └── producer.go    # Kafka producer implementation
 ├── machines
@@ -141,4 +139,4 @@ We appreciate your help in making this simulator better\!
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](https://www.google.com/search?q=LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/ajayykmr/edge_simulator_go/blob/106bb9017f73e33851433a722e058fb0aaab2c7a/LICENSE.md) file for details.
