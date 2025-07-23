@@ -30,7 +30,7 @@ func startSingleMQTTMachine(ctx context.Context, mqttClient mqtt.Client, machine
 			}
 
 			//publish data to MQTT
-			err = mqttClient.Publish("factory/pune/cnc/"+machineID+"/data", 0, true, jsonData)
+			err = mqttClient.Publish("factory/pune/cnc/"+machineID+"/data", 0, false, jsonData)
 			if err != nil {
 				// log.Printf("Error publishing data for machine %s: %v", machineID, err)
 				continue
