@@ -24,8 +24,6 @@ func InitializeMQTTClient() (mqtt.Client, error) {
 	mqttClient, err := mqtt.InitializeClient(mqttServer, clientID)
 	if err != nil {
 		return mqtt.Client{}, fmt.Errorf("failed to initialize MQTT client: %v", err)
-	} else {
-		fmt.Println("✅ MQTT client initialized successfully")
 	}
 
 	testTopic := os.Getenv("MQTT_TEST_TOPIC")

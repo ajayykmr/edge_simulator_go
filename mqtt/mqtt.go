@@ -43,7 +43,7 @@ func (c *Client) Subscribe(topic string, qos byte, handler MQTT.MessageHandler) 
 func (c *Client) Disconnect() {
 	if c.client != nil && c.client.IsConnected() {
 		c.client.Disconnect(250)
-		fmt.Println("🔴 MQTT client disconnected successfully\n")
+		// fmt.Println("🔴 MQTT client disconnected successfully\n")
 	}
 }
 

@@ -45,7 +45,7 @@ func startSingleHTTPMachine(ctx context.Context, machineID string, interval time
 func SendMachineDataViaHTTP(ctx context.Context, count int) {
 	wg := &sync.WaitGroup{}
 	for i := 0; i < count; i++ {
-		machineID := "CNC-" + strconv.Itoa(i+1)
+		machineID := "CNC-HTTP-" + strconv.Itoa(i+1)
 		interval := time.Millisecond * time.Duration(utils.RandInt(500, 2000))
 
 		wg.Add(1)
@@ -57,4 +57,21 @@ func SendMachineDataViaHTTP(ctx context.Context, count int) {
 		wg.Wait()
 		// log.Println("Stopped sending data via HTTP")
 	}()
+}
+
+func CheckHTTPServerStatus() error {
+	resp, err := http.Get("http://localhost:8080/health")
+	if err != nil {
+		// log.Println("HTTP service is down:", err)
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		// log.Println("HTTP service returned non-OK status:", resp.Status)
+		return err
+	}
+
+	// log.Println("HTTP service is running")
+	return nil
 }
