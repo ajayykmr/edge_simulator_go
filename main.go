@@ -22,6 +22,16 @@ var httpCancel, mqttCancel context.CancelFunc
 var httpCount, mqttCount int
 
 func main() {
+	for {
+		restart := runApp()
+		if !restart {
+			break
+		}
+	}
+}
+
+// returns true if the app should restart
+func runApp() bool {
 
 	clearScreen()
 
@@ -63,9 +73,10 @@ func main() {
 	}
 
 	if !mqttServiceActive && !httpServiceActive {
-		fmt.Printf("\n⚠️ No active services found. Start at least one service to begin simulation.\n\n")
-		printExitMessages()
-		return
+		fmt.Printf("\n⚠️  No active services found. Start at least one service to begin simulation.\n\n")
+
+		// printExitMessages()
+		// return false
 	}
 
 	fmt.Println()
@@ -81,7 +92,7 @@ func main() {
 		if mqttServiceActive {
 			menuItems = append(menuItems, menuItem("MQTT", mqttRunning, mqttCount))
 		}
-		menuItems = append(menuItems, "Exit")
+		menuItems = append(menuItems, "Restart", "Exit")
 
 		prompt := promptui.Select{
 			Label: "Select Action",
@@ -91,7 +102,7 @@ func main() {
 		_, result, err := prompt.Run()
 		if err != nil {
 			fmt.Println("Prompt failed:", err)
-			return
+			return false
 		}
 
 		switch {
@@ -122,6 +133,14 @@ func main() {
 				}
 				mqttRunning = false
 			}
+		case result == "Restart":
+			if httpCancel != nil {
+				httpCancel()
+			}
+			if mqttCancel != nil {
+				mqttCancel()
+			}
+			return true // tells main() to restart
 		case result == "Exit":
 			clearScreen()
 			if httpCancel != nil {
@@ -131,8 +150,7 @@ func main() {
 				mqttCancel() // stops the goroutines
 			}
 			printExitMessages()
-
-			return
+			return false // tells main() to exit
 		}
 	}
 }
