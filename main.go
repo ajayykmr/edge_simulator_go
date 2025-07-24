@@ -49,7 +49,6 @@ func main() {
 
 	if !mqttServiceActive {
 		//no mqtt support
-		fmt.Println("❌ [MQTT Error]", err.Error())
 		fmt.Println("❌ MQTT service not active. Skipping MQTT data publishing.")
 		fmt.Println()
 	} else {
